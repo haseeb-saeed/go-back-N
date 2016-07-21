@@ -10,14 +10,13 @@ PACKET_SIZE = 512
 RECEIVER_IP = 'localhost'
 RECEIVER_PORT = 8080
 RECEIVER_ADDR = (RECEIVER_IP, RECEIVER_PORT)
-TIMEOUT_INTERVAL = 0.500
-TIMER_STOP = -1
-WINDOW_SIZE = 4
 SLEEP_INTERVAL = 0.05
+TIMEOUT_INTERVAL = 0.5
+WINDOW_SIZE = 4
 
 # Shared resources across threads
-mutex = _thread.allocate_lock()
 base = 0
+mutex = _thread.allocate_lock()
 send_timer = Timer(TIMEOUT_INTERVAL)
 
 # Sets the window size
@@ -85,7 +84,8 @@ def receive(sock):
     global send_timer
 
     while True:
-        msg, _ = udt.recv(sock);
+        data, _ = udt.recv(sock);
+        msg = data.decode('utf-8')
         ack = int(msg);
 
         # If we get an ACK for the first in-flight packet
