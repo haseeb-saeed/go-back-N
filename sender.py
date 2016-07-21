@@ -41,6 +41,8 @@ def send(filename, sock):
         if not data:
             break
         packets.append(data)
+    # Add empty byte as sentinel
+    packets.append(b'')
 
     num_packets = len(packets)
     window_size = set_window_size(num_packets)
@@ -50,30 +52,31 @@ def send(filename, sock):
     # Start the receiver thread
     _thread.start_new_thread(receive, (sock,))
 
-    # Send all the packets in the window
-    mutex.acquire()
-    while next_to_send < base + window_size:
-        # TODO: Add sequence number of packet
-        udt.send(packets[next_to_send], sock, RECEIVER_ADDR)
-        next_to_send += 1
-
-    # Start the timer
-    if not send_timer.running():
-        send_timer.start()
-
-    # Wait until a timer goes off or we get an ACK
-    while send_timer.running() and not send_timer.timeout():
-        mutex.release()
-        time.sleep(SLEEP_INTERVAL)
+    while base < num_packets:
+        # Send all the packets in the window
         mutex.acquire()
+        while next_to_send < base + window_size:
+            # TODO: Add sequence number of packet
+            udt.send(packets[next_to_send], sock, RECEIVER_ADDR)
+            next_to_send += 1
 
-    if send_timer.timeout():
-        # Looks like we timed out
-        send_timer.stop();
-        next_to_send = base
-    else:
-        window_size = set_window_size(num_packets)
-    mutex.release()
+        # Start the timer
+        if not send_timer.running():
+            send_timer.start()
+
+        # Wait until a timer goes off or we get an ACK
+        while send_timer.running() and not send_timer.timeout():
+            mutex.release()
+            time.sleep(SLEEP_INTERVAL)
+            mutex.acquire()
+
+        if send_timer.timeout():
+            # Looks like we timed out
+            send_timer.stop();
+            next_to_send = base
+        else:
+            window_size = set_window_size(num_packets)
+        mutex.release()
     
 # Receive thread
 # Once we receive an ACK for the send packet, increment the window base

@@ -12,6 +12,9 @@ def receive(sock, filename):
     expected_num = 0
     while True:
         data, _ = udt.recv(sock)
+        if not data:
+            break
+        
         # TODO: Remove the sequence number
         # Send back an ACK
         packet = str.encode(str(expected_num))
@@ -20,7 +23,7 @@ def receive(sock, filename):
             expected_num += 1
             file.write(data)
 
-        # TODO: When to close the file and break from the loop?
+    file.close()
 
 # Main function
 if __name__ == '__main__':
