@@ -4,11 +4,13 @@ import _thread
 import time
 import udt
 
+from timer import Timer
+
 PACKET_SIZE = 512
 RECEIVER_IP = 'localhost'
 RECEIVER_PORT = 8080
 RECEIVER_ADDR = (RECEIVER_IP, RECEIVER_PORT)
-TIMEOUT_INTERVAL = 500
+TIMEOUT_INTERVAL = 0.500
 TIMER_STOP = -1
 WINDOW_SIZE = 4
 SLEEP_INTERVAL = 0.05
@@ -16,7 +18,7 @@ SLEEP_INTERVAL = 0.05
 # Shared resources across threads
 mutex = _thread.allocate_lock()
 base = 0
-timer_start = TIMER_STOP
+send_timer = Timer(TIMEOUT_INTERVAL)
 
 # Sets the window size
 def set_window_size(num_packets):
@@ -30,7 +32,7 @@ def set_window_size(num_packets):
 def send(filename, sock):
     global mutex
     global base
-    global timer_start
+    global send_timer
 
     # TODO: Open file
     # Add all the packets to the window
@@ -57,18 +59,18 @@ def send(filename, sock):
         next_to_send += 1
 
     # Start the timer
-    # TODO: Make timer great again
-    if timer_start == TIMER_STOP:
-        timer_start = time.clock()
+    if not send_timer.running():
+        send_timer.start()
 
     # Wait until a timer goes off or we get an ACK
-    while time_start != TIMER_STOP and time.clock() - time_start < TIMEOUT_INTERVAL:
+    while send_timer.running() and not send_timer.timeout():
         mutex.release()
         time.sleep(SLEEP_INTERVAL)
         mutex.acquire()
 
-    if time_start != TIMER_STOP:
-        # We looks like we timed out
+    if send_timer.timeout():
+        # Looks like we timed out
+        send_timer.stop();
         next_to_send = base
     else:
         window_size = set_window_size(num_packets)
@@ -80,7 +82,7 @@ def send(filename, sock):
 def receive(sock):
     global mutex
     global base
-    global timer_start
+    global send_timer
 
     while True:
         msg, _ = udt.recv(sock);
@@ -90,7 +92,7 @@ def receive(sock):
         if (ack >= base):
             mutex.acquire()
             base = ack + 1
-            timer_start = TIMER_STOP
+            send_timer.start()
             mutex.release()
 
 # Main function
