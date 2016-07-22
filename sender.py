@@ -1,4 +1,5 @@
 # sender.py - The sender in the reliable data transfer protocol
+import packet
 import socket
 import _thread
 import time
@@ -34,15 +35,17 @@ def send(filename, sock):
     global send_timer
 
     # TODO: Open file
-    # Add all the packets to the window
+    # Add all the packets to the buffer
     packets = []
+    seq_num = 0
     while True:
         data = file.read(PACKET_SIZE)
         if not data:
             break
-        packets.append(data)
-    # Add empty byte as sentinel
-    packets.append(b'')
+        packets.append(packet.make(seq_num, data))
+        seq_num += 1
+    # Add empty packet as sentinel
+    packets.append(packet.make_empty())
 
     num_packets = len(packets)
     window_size = set_window_size(num_packets)
@@ -87,15 +90,14 @@ def receive(sock):
     global send_timer
 
     while True:
-        data, _ = udt.recv(sock);
-        msg = data.decode('utf-8')
-        ack = int(msg);
+        pkt, _ = udt.recv(sock);
+        ack, _ = packet.extract(pkt);
 
         # If we get an ACK for the first in-flight packet
         if (ack >= base):
             mutex.acquire()
             base = ack + 1
-            send_timer.start()
+            send_timer.stop()
             mutex.release()
 
 # Main function
