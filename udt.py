@@ -13,5 +13,5 @@ def send(packet, sock, addr):
 
 # Receive a packet from the unreliable channel
 def recv(sock):
-    data, addr = sock.recvfrom(512)
+    data, addr = sock.recvfrom(1024)
     return packet, addr
