@@ -43,4 +43,5 @@ if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(RECEIVER_ADDR) 
     filename = sys.argv[1]
+    receive(sock, filename)
     sock.close()

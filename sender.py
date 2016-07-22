@@ -27,7 +27,7 @@ def set_window_size(num_packets):
     return min(WINDOW_SIZE, num_packets - base)
 
 # Send thread
-def send(filename, sock):
+def send(sock, filename):
     global mutex
     global base
     global send_timer
@@ -36,7 +36,7 @@ def send(filename, sock):
     try:
         file = open(filename, 'rb')
     except IOError:
-        print('Unable to open', file)
+        print('Unable to open', filename)
         return
     
     # Add all the packets to the buffer
@@ -111,4 +111,6 @@ if __name__ == '__main__':
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     filename = sys.argv[1]
+
+    send(sock, filename)
     sock.close()
