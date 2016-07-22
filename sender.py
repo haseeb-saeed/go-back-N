@@ -56,10 +56,9 @@ def send(filename, sock):
     _thread.start_new_thread(receive, (sock,))
 
     while base < num_packets:
-        # Send all the packets in the window
         mutex.acquire()
+        # Send all the packets in the window
         while next_to_send < base + window_size:
-            # TODO: Add sequence number of packet
             udt.send(packets[next_to_send], sock, RECEIVER_ADDR)
             next_to_send += 1
 
