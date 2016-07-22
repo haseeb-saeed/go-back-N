@@ -20,17 +20,24 @@ def receive(sock, filename):
     expected_num = 0
     while True:
         # Get the next packet from the sender
-        pkt, _ = udt.recv(sock)
+        pkt, addr = udt.recv(sock)
         if not pkt:
             break
         seq_num, data = packet.extract(pkt)
+        print('Got packet', seq_num)
         
         # Send back an ACK
-        pkt = packet.make(expected_num)
-        udt.send(pkt, sock, RECEIVER_ADDR)
         if seq_num == expected_num:
+            print('Got expected packet')
+            print('Sending ACK', expected_num)
+            pkt = packet.make(expected_num)
+            udt.send(pkt, sock, addr)
             expected_num += 1
             file.write(data)
+        else:
+            print('Sending ACK', expected_num - 1)
+            pkt = packet.make(expected_num - 1)
+            udt.send(pkt, sock, addr)
 
     file.close()
 
