@@ -9,10 +9,8 @@ import udt
 from timer import Timer
 
 PACKET_SIZE = 25
-RECEIVER_IP = 'localhost'
-RECEIVER_PORT = 8080
-RECEIVER_ADDR = (RECEIVER_IP, RECEIVER_PORT)
-SENDER_PORT = 8081
+RECEIVER_ADDR = ('localhost', 8080)
+SENDER_ADDR = ('localhost', 0)
 SLEEP_INTERVAL = 0.05
 TIMEOUT_INTERVAL = 0.5
 WINDOW_SIZE = 4
@@ -119,7 +117,7 @@ if __name__ == '__main__':
         exit()
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(('localhost', SENDER_PORT))
+    sock.bind(SENDER_ADDR)
     filename = sys.argv[1]
 
     send(sock, filename)
