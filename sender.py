@@ -1,6 +1,7 @@
 # sender.py - The sender in the reliable data transfer protocol
 import packet
 import socket
+import sys
 import _thread
 import time
 import udt
@@ -104,5 +105,10 @@ def receive(sock):
 
 # Main function
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print('Expected filename as command line argument')
+        exit()
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    filename = sys.argv[1]
     sock.close()
