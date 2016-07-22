@@ -9,7 +9,13 @@ RECEIVER_ADDR = (RECEIVER_IP, RECEIVER_PORT)
 
 # Receive packets from the sender
 def receive(sock, filename):
-    # TODO: Open the file for writing
+    # Open the file for writing
+    try:
+        file = open(filename, 'wb')
+    except IOError:
+        print('Unable to open', filename)
+        return
+    
     expected_num = 0
     while True:
         # Get the next packet from the sender

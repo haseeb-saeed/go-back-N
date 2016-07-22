@@ -25,16 +25,19 @@ def set_window_size(num_packets):
     global base
     return min(WINDOW_SIZE, num_packets - base)
 
-# Check the next to send and see if it's in the window
-# If so, send it
-# If no timer has started, start the timer for the packet
-# While we cannot send any more, and there has been no timeout, sleep for a little bit
+# Send thread
 def send(filename, sock):
     global mutex
     global base
     global send_timer
 
-    # TODO: Open file
+    # Open the file
+    try:
+        file = open(filename, 'rb')
+    except IOError:
+        print('Unable to open', file)
+        return
+    
     # Add all the packets to the buffer
     packets = []
     seq_num = 0
@@ -79,10 +82,10 @@ def send(filename, sock):
         else:
             window_size = set_window_size(num_packets)
         mutex.release()
+
+    file.close()
     
 # Receive thread
-# Once we receive an ACK for the send packet, increment the window base
-# Stop the timer
 def receive(sock):
     global mutex
     global base
